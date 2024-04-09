@@ -1,9 +1,8 @@
-﻿using DefaultNamespace.Artifacts;
-using Photon.Pun;
-using Photon.Realtime;
+﻿using Photon.Pun;
 using System;
 using System.Collections;
-using System.Linq;
+using System.Reflection;
+using System.Threading;
 using UnityEngine;
 using Zorro.Core;
 using Zorro.Core.CLI;
@@ -12,6 +11,7 @@ namespace ExampleAssembly
 {
     public class Cheat : MonoBehaviour
     {
+        private PhotonView photonView;
         private int mainWID = 1024;
         private Rect mainWRect = new Rect(5f, 5f, 300f, 150f);
         private bool godmode;
@@ -464,6 +464,58 @@ namespace ExampleAssembly
                             foreach (Player player in Cheat.players)
                             {
                                 WebTroll(player, true);
+                            }
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
+                if (GUILayout.Button("Spawn Drone"))
+                {
+                    foreach (ShopHandler shop in FindObjectsOfType<ShopHandler>())
+                    {
+                        var fieldInfo = typeof(ShopHandler).GetField("m_PhotonView", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (fieldInfo != null)
+                        {
+                            PhotonView m_PhotonView = (PhotonView)fieldInfo.GetValue(shop);
+                            byte[] itemIDs = new byte[] { 0x1 };
+                            m_PhotonView.RPC("RPCA_SpawnDrone", RpcTarget.All, new object[]
+            {
+                itemIDs
+            });
+                        }
+                    }
+                }
+                GUILayout.BeginHorizontal();
+                {
+                    if (GUILayout.Button("Ragdoll Players"))
+                    {
+                        if (Cheat.players.Length > 0)
+                        {
+                            foreach (Player player in Cheat.players)
+                            {
+                                if (player == Player.localPlayer)
+                                    continue;
+                                MethodInfo methodInfo = typeof(Player).GetMethod("CallTakeDamageAndAddForceAndFall", BindingFlags.NonPublic | BindingFlags.Instance);
+                                if (methodInfo != null)
+                                {
+                                    methodInfo.Invoke(player, new object[] { 0f, new Vector3(UnityEngine.Random.Range(-10f, 10f), UnityEngine.Random.Range(-10f, 10f), 5f), 2.5f });
+                                }
+                            }
+                        }
+                    }
+                    if (GUILayout.Button("Kill Players"))
+                    {
+                        if (Cheat.players.Length > 0)
+                        {
+                            foreach (Player player in Cheat.players)
+                            {
+                                if (player == Player.localPlayer)
+                                    continue;
+                                MethodInfo methodInfo = typeof(Player).GetMethod("CallTakeDamageAndAddForceAndFall", BindingFlags.NonPublic | BindingFlags.Instance);
+                                if (methodInfo != null)
+                                {
+                                    methodInfo.Invoke(player, new object[] { 9999999f, new Vector3(UnityEngine.Random.Range(-15f, 15f), UnityEngine.Random.Range(-15f, 15f), 5f), 500f });
+                                }
                             }
                         }
                     }
