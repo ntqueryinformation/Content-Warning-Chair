@@ -122,7 +122,9 @@ namespace ExampleAssembly {
                         if (ESPUtils.IsOnScreen(w2sHead))
                         {
                             if (!player.ai)
+                            {
                                 ESPUtils.CornerBox(new Vector2(w2sHead.x, Screen.height - w2sHead.y - 20f), height / 2f, height + 20f, 2f, Color.cyan, true);
+                            }
                             else
                                 ESPUtils.CornerBox(new Vector2(w2sHead.x, Screen.height - w2sHead.y - 20f), height / 2f, height + 20f, 2f, Color.red, true);
                         }
@@ -152,9 +154,9 @@ namespace ExampleAssembly {
                         if (ESPUtils.IsOnScreen(w2s))
                         {
                             if (!player.ai)
-                            ESPUtils.DrawString(w2s, player.name, Color.cyan, true, 12, FontStyle.Bold, 1);
+                            ESPUtils.DrawString(w2s, player.name.Replace("(Clone)",""), Color.cyan, true, 12, FontStyle.Bold, 1);
                             else
-                                ESPUtils.DrawString(w2s, player.gameObject.name, Color.red, true, 12, FontStyle.Bold, 1);
+                                ESPUtils.DrawString(w2s, player.gameObject.name.Replace("(Clone)", ""), Color.red, true, 12, FontStyle.Bold, 1);
                         }
                     }
                 }

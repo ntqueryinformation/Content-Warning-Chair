@@ -1,6 +1,9 @@
-﻿using Photon.Pun;
+﻿using DefaultNamespace.Artifacts;
+using Photon.Pun;
+using Photon.Realtime;
 using System;
 using System.Collections;
+using System.Linq;
 using UnityEngine;
 using Zorro.Core;
 
@@ -10,32 +13,27 @@ namespace ExampleAssembly
     {
         private int mainWID = 1024;
         private Rect mainWRect = new Rect(5f, 5f, 300f, 150f);
-
-        private bool magicBullet;
         private bool godmode;
         private bool infBattery;
-        private bool infBatteryEveryone;
         private bool drawMenu = true;
         private bool stamina = false;
         private bool oxygen = false;
         private bool superJump;
         private bool rainbowVisor;
         private bool blinkingFace;
+
         private float lastCacheTime = Time.time + 5f;
         private float lastItemCache = Time.time + 1f;
 
         public static Player[] players;
+        public static BombItem[] bombs;
         public static PlayerController controller;
         public static Monster[] monsters;
         public static ItemInstance[] droppedItems;
         private int selectedItemIndex = -1;
-        private int selectedItemIndex2 = -1;
-        private Rect windowRect = new Rect((Screen.width - 250) / 2, (Screen.height - 500) / 2, 250, 500); // Position the window in the center
-        private bool showItemSpawnerWindow = false;
         private Vector2 scrollPosition;
-        private Vector2 scrollPosition2;
 
-        private string[] enemyNames = new string[] { "Ear", "Zombe", "Spider", "Snatcho", "AnglerMimic", "EyeGuy", "Toolkit_Wisk", "Bombs", "Knifo", "Angler", "BigSlap", "Ghost", "BarnacleBall", "Jello" }; // Add the rest of your enemy names here
+        private string[] enemyNames = new string[] { "Ear", "Zombe", "Spider", "Snatcho", "AnglerMimic", "EyeGuy", "Toolkit_Wisk", "Bombs", "Knifo", "Angler", "BigSlap", "Ghost", "BarnacleBall", "Jello", "Weeping", "MimicInfiltrator","Flicker" }; // Add the rest of your enemy names here
         private int selectedEnemyIndex = -1;
         private bool isEnemyDropdownVisible = false;
         private Vector2 enemyScrollPosition;
@@ -162,10 +160,11 @@ namespace ExampleAssembly
                 }
                 if (godmode)
                 {
-                    {
-                        // Player.localPlayer.refs.visor.ApplyVisorColor(Color.red);
-                        Player.localPlayer.data.health = 100;
-                    }
+                    //if (Player.localPlayer.data.dead)
+                    //{
+                    //    Player.localPlayer.CallRevive();
+                    //}
+                    Player.localPlayer.data.health = 100f;
                 }
                 if (infBattery)
                 {
@@ -183,14 +182,14 @@ namespace ExampleAssembly
                         }
                     }
                 }
-               
             }
 
             if (Time.time >= lastCacheTime)
             {
-                lastCacheTime = Time.time + 5f;
+                lastCacheTime = Time.time + 3f;
 
                 players = FindObjectsOfType<Player>();
+
                 //controller = base.GetComponent<PlayerController>();
                 // vehicles = FindObjectsOfType<Car>();
 
@@ -202,6 +201,7 @@ namespace ExampleAssembly
                 lastItemCache = Time.time + 1f;
 
                 droppedItems = FindObjectsOfType<ItemInstance>();
+                bombs = FindObjectsOfType<BombItem>();
             }
         }
 
@@ -213,66 +213,121 @@ namespace ExampleAssembly
             }
         }
 
+        private int tabSelected = 0;
+
+        private void GooTroll(ItemGooBall gooItem, Player player, bool gooMonsters)
+        {
+            if (player != null && player != Player.localPlayer)
+            {
+                if (gooMonsters && !player.ai)
+                    return;
+
+                if (!gooMonsters && player.ai)
+                    return;
+
+                PhotonNetwork.Instantiate(gooItem.explodedGoopPref.name, player.HeadPosition(), Quaternion.identity, 0, null);
+            }
+        }
+
+        private void WebTroll(Player player, bool gooMonsters)
+        {
+            if (player != null && player != Player.localPlayer)
+            {
+                if (gooMonsters && !player.ai)
+                    return;
+
+                if (!gooMonsters && player.ai)
+                    return;
+                PhotonNetwork.Instantiate("Web", player.HeadPosition(), Quaternion.identity, 0, null);
+            }
+        }
+
         private void MainWindow(int id)
         {
-            GUILayout.BeginHorizontal();
+            GUILayout.BeginHorizontal();//Tab Selector
             {
-                stamina = GUILayout.Toggle(stamina, "Inf. Stamina");
-                oxygen = GUILayout.Toggle(oxygen, "Inf Oxygen");
-                godmode = GUILayout.Toggle(godmode, "God Mode");
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            {
-                superJump = GUILayout.Toggle(superJump, "Inf. Jump");
-                rainbowVisor = GUILayout.Toggle(rainbowVisor, "Rainbow Face");
-                blinkingFace = GUILayout.Toggle(blinkingFace, "Blinking Face");
-            }
-            GUILayout.EndHorizontal();
-
-            GUILayout.BeginHorizontal();
-            {
-                infBattery = GUILayout.Toggle(infBattery, "Inf. Battery");
-            }
-            GUILayout.EndHorizontal();
-            GUILayout.BeginVertical("Host Only", GUI.skin.box);
-            {
-                GUILayout.Space(20f);
-
-                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Self Tab"))
                 {
-                    if (GUILayout.Button("Add $10K"))
+                    tabSelected = 0;
+                }
+                if (GUILayout.Button("Lobby Tab"))
+                {
+                    tabSelected = 1;
+                }
+                if (GUILayout.Button("Troll Tab"))
+                {
+                    tabSelected = 2;
+                }
+                if (GUILayout.Button("Spawn Tab"))
+                {
+                    tabSelected = 3;
+                }
+            }
+            GUILayout.EndHorizontal();
+
+            if (tabSelected == 0) //Self Tab
+            {
+                GUILayout.BeginVertical("ESP", GUI.skin.box);
+                {
+                    GUILayout.Space(20f);
+
+                    GUILayout.BeginHorizontal();
                     {
-                        SurfaceNetworkHandler.RoomStats.AddMoney(10000);
+                        ESP.crosshair = GUILayout.Toggle(ESP.crosshair, "Crosshair");
+                        ESP.item = GUILayout.Toggle(ESP.item, "Items");
                     }
-                }
-                GUILayout.EndHorizontal();
+                    GUILayout.EndHorizontal();
 
+                    GUILayout.BeginHorizontal();
+                    {
+                        ESP.playerBox = GUILayout.Toggle(ESP.playerBox, "Player Box");
+                        if (GUILayout.Button("Chams"))
+                        {
+                            ESP.DoChams();
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+                    ESP.monsterBox = GUILayout.Toggle(ESP.monsterBox, "Monster Boxes");
+                    ESP.playerName = GUILayout.Toggle(ESP.playerName, "Names");
+                    //  ESP.playerName = GUILayout.Toggle(ESP.playerName, "Player Name");
+                }
+                GUILayout.EndVertical();
+
+                GUILayout.BeginVertical("Self Toggles", GUI.skin.box);
+                {
+                    GUILayout.Space(20f);
+                    GUILayout.BeginHorizontal();
+                    {
+                        stamina = GUILayout.Toggle(stamina, "Inf. Stamina");
+                        oxygen = GUILayout.Toggle(oxygen, "Inf Oxygen");
+                        godmode = GUILayout.Toggle(godmode, "God Mode");
+                    }
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    {
+                        superJump = GUILayout.Toggle(superJump, "Inf. Jump");
+                        rainbowVisor = GUILayout.Toggle(rainbowVisor, "Rainbow Face");
+                        blinkingFace = GUILayout.Toggle(blinkingFace, "Blinking Face");
+                    }
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    {
+                        infBattery = GUILayout.Toggle(infBattery, "Inf. Battery");
+                    }
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.EndVertical();
                 GUILayout.BeginHorizontal();
                 {
-                }
-                GUILayout.EndHorizontal();
-            }
-            GUILayout.EndVertical();
-
-            if (Player.localPlayer != null)
-            {
-                GUILayout.BeginHorizontal();
-                {
-                    if (GUILayout.Button("Revive yourself"))
+                    if (GUILayout.Button("Revive Self"))
                     {
                         Player.localPlayer.CallRevive();
+                        Player.localPlayer.data.health = 100f;
                     }
-                    if (GUILayout.Button("Spawn Mimic"))
+                    if (GUILayout.Button("Ragdoll Self"))
                     {
-                        Monster.SpawnMonster("AnglerMimic");
-
-
-                        //Ear
-                        //Zombe
-                        //Spider
-                        //Snatcho
-                        //(Clone)
+                        Player.localPlayer.RPCA_TakeDamageAndAddForce(0f, new Vector3(UnityEngine.Random.Range(-10f, 10f), UnityEngine.Random.Range(-10f, 10f), UnityEngine.Random.Range(1f, 10f)), 3f);
                     }
                     if (GUILayout.Button("Spawn Player"))
                     {
@@ -280,122 +335,197 @@ namespace ExampleAssembly
                     }
                 }
                 GUILayout.EndHorizontal();
-                GUILayout.BeginHorizontal();
+            }//Self Tab
+            if (tabSelected == 1)
+            {
+                GUILayout.BeginVertical("Host Only", GUI.skin.box);
                 {
-                    if (GUILayout.Button("Revive All Players"))
+                    GUILayout.Space(20f);
+
+                    GUILayout.BeginHorizontal();
                     {
-                        if (Cheat.players.Length > 0)
+                        if (GUILayout.Button("Add $10K"))
                         {
-                            foreach (Player player in Cheat.players)
+                            SurfaceNetworkHandler.RoomStats.AddMoney(10000);
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.EndVertical();
+
+                GUILayout.BeginVertical("Offhost", GUI.skin.box);
+                {
+                    GUILayout.Space(20f);
+                    GUILayout.BeginHorizontal();
+                    {
+                        if (GUILayout.Button("Revive All Players"))
+                        {
+                            if (Cheat.players.Length > 0)
                             {
-                                if (player != null && player != Player.localPlayer)
+                                foreach (Player player in Cheat.players)
                                 {
-                                    player.CallRevive();
-                                    player.data.health = 100;
+                                    if (player != null)
+                                    {
+                                        player.CallRevive();
+                                        player.data.health = 100f;
+                                    }
                                 }
                             }
                         }
                     }
                     GUILayout.EndHorizontal();
                 }
-            }
-
-            GUILayout.Space(20f);
-
-            GUILayout.BeginVertical("ESP", GUI.skin.box);
+                GUILayout.EndVertical();
+            }//Lobby Tab
+            if (tabSelected == 2)
             {
-                GUILayout.Space(20f);
-
                 GUILayout.BeginHorizontal();
                 {
-                    ESP.crosshair = GUILayout.Toggle(ESP.crosshair, "Crosshair");
-                    ESP.item = GUILayout.Toggle(ESP.item, "Items");
-                }
-                GUILayout.EndHorizontal();
-
-                GUILayout.BeginHorizontal();
-                {
-                    ESP.playerBox = GUILayout.Toggle(ESP.playerBox, "Player Box");
-                    if (GUILayout.Button("Chams"))
+                    if (GUILayout.Button("Goo All Players"))
                     {
-                        ESP.DoChams();
-                    }
-                }
-                GUILayout.EndHorizontal();
-                ESP.monsterBox = GUILayout.Toggle(ESP.monsterBox, "Monster Boxes");
-                //  ESP.playerName = GUILayout.Toggle(ESP.playerName, "Player Name");
-            }
-            GUILayout.EndVertical();
-            GUILayout.BeginVertical("Item Spawner", GUI.skin.box);
-            {
-                GUILayout.Space(20f);
-                if (GUILayout.Button(buttonText/*, GUILayout.Width(200), GUILayout.Height(40)*/))
-                {
-                    isDropdownVisible = !isDropdownVisible;
-                }
-
-                // This block only appears after clicking the button, acting as the dropdown.
-                if (isDropdownVisible)
-                {
-                    // Set a proper height for the dropdown area
-                    scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(270), GUILayout.Height(200));
-
-                    for (int i = 0; i < SingletonAsset<ItemDatabase>.Instance.lastLoadedItems.Count; i++)
-                    {
-                        if (GUILayout.Button(SingletonAsset<ItemDatabase>.Instance.lastLoadedItems[i].name /*GUILayout.Width(190), GUILayout.Height(30)*/))
+                        var items = SingletonAsset<ItemDatabase>.Instance.lastLoadedItems;
+                        for (int i = 0; i < items.Count; i++)
                         {
-                            this.selectedItemIndex = i;
-                            buttonText = SingletonAsset<ItemDatabase>.Instance.lastLoadedItems[i].name; // Update the button text
-                            isDropdownVisible = false;
+                            if (items[i].name == "GooBall")
+                            {
+                                Item GooItem = items[i];
+                                ItemGooBall test = GooItem.itemObject.GetComponent<ItemGooBall>();
+
+                                if (Cheat.players.Length > 0)
+                                {
+                                    foreach (Player player in Cheat.players)
+                                    {
+                                        GooTroll(test, player, false);
+                                    }
+                                }
+                                break;
+                            }
                         }
                     }
-
-                    GUILayout.EndScrollView();
-                }
-
-                if (this.selectedItemIndex != -1 && GUILayout.Button("Give Item"/*, GUILayout.Width(200), GUILayout.Height(40)*/))
-                {
-                    EquipItem(SingletonAsset<ItemDatabase>.Instance.lastLoadedItems[this.selectedItemIndex]);
-                    //this.selectedItemIndex = -1;
-                }
-            }
-            GUILayout.EndVertical();
-
-            GUILayout.BeginVertical("Enemy Spawner", GUI.skin.box);
-            {
-                GUILayout.Space(20f);
-
-                if (GUILayout.Button(enemyButtonText/*, GUILayout.Width(200), GUILayout.Height(40)*/))
-                {
-                    isEnemyDropdownVisible = !isEnemyDropdownVisible;
-                }
-
-                // This block only appears after clicking the button, acting as the dropdown.
-                if (isEnemyDropdownVisible)
-                {
-                    // Set a proper height for the dropdown area
-                    enemyScrollPosition = GUILayout.BeginScrollView(enemyScrollPosition, GUILayout.Width(270), GUILayout.Height(200));
-
-                    for (int i = 0; i < enemyNames.Length; i++)
+                    if (GUILayout.Button("Goo All Monsters"))
                     {
-                        if (GUILayout.Button(enemyNames[i] /*GUILayout.Width(190), GUILayout.Height(30)*/))
+                        var items = SingletonAsset<ItemDatabase>.Instance.lastLoadedItems;
+                        for (int i = 0; i < items.Count; i++)
                         {
-                            selectedEnemyIndex = i;
-                            enemyButtonText = enemyNames[i]; // Update the button text
-                            isEnemyDropdownVisible = false;
+                            if (items[i].name == "GooBall")
+                            {
+                                Item GooItem = items[i];
+                                ItemGooBall test = GooItem.itemObject.GetComponent<ItemGooBall>();
+
+                                if (Cheat.players.Length > 0)
+                                {
+                                    foreach (Player player in Cheat.players)
+                                    {
+                                        GooTroll(test, player, true);
+                                    }
+                                }
+                                break;
+                            }
                         }
                     }
-
-                    GUILayout.EndScrollView();
                 }
-
-                if (selectedEnemyIndex != -1 && GUILayout.Button("Spawn Enemy"/*, GUILayout.Width(200), GUILayout.Height(40)*/))
-                {
-                    Monster.SpawnMonster(enemyNames[selectedEnemyIndex]);
-                    // selectedEnemyIndex = -1; // Uncomment if you want to reset the selection after spawning
-                }
+                    GUILayout.EndHorizontal();
+                    GUILayout.BeginHorizontal();
+                    {
+                        if (GUILayout.Button("Web All Players"))
+                        {
+                            if (Cheat.players.Length > 0)
+                            {
+                                foreach (Player player in Cheat.players)
+                                {
+                                    WebTroll(player, false);
+                                }
+                            }
+                        }
+                        if (GUILayout.Button("Web All Monsters"))
+                        {
+                            if (Cheat.players.Length > 0)
+                            {
+                                foreach (Player player in Cheat.players)
+                                {
+                                    WebTroll(player, true);
+                                }
+                            }
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+      
+                
             }
-            GUILayout.EndVertical();
+            if (tabSelected == 3)
+            {
+                GUILayout.BeginVertical("Item Spawner", GUI.skin.box);
+                {
+                    GUILayout.Space(20f);
+                    if (GUILayout.Button(buttonText/*, GUILayout.Width(200), GUILayout.Height(40)*/))
+                    {
+                        isDropdownVisible = !isDropdownVisible;
+                    }
+
+                    // This block only appears after clicking the button, acting as the dropdown.
+                    if (isDropdownVisible)
+                    {
+                        // Set a proper height for the dropdown area
+                        scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUILayout.Width(270), GUILayout.Height(200));
+
+                        for (int i = 0; i < SingletonAsset<ItemDatabase>.Instance.lastLoadedItems.Count; i++)
+                        {
+                            if (GUILayout.Button(SingletonAsset<ItemDatabase>.Instance.lastLoadedItems[i].name /*GUILayout.Width(190), GUILayout.Height(30)*/))
+                            {
+                                this.selectedItemIndex = i;
+                                buttonText = SingletonAsset<ItemDatabase>.Instance.lastLoadedItems[i].name; // Update the button text
+                                isDropdownVisible = false;
+                            }
+                        }
+
+                        GUILayout.EndScrollView();
+                    }
+
+                    if (this.selectedItemIndex != -1 && GUILayout.Button("Give Item"/*, GUILayout.Width(200), GUILayout.Height(40)*/))
+                    {
+                        EquipItem(SingletonAsset<ItemDatabase>.Instance.lastLoadedItems[this.selectedItemIndex]);
+                        //this.selectedItemIndex = -1;
+                    }
+                }
+                GUILayout.EndVertical();
+
+                GUILayout.BeginVertical("Enemy Spawner", GUI.skin.box);
+                {
+                    GUILayout.Space(20f);
+
+                    if (GUILayout.Button(enemyButtonText/*, GUILayout.Width(200), GUILayout.Height(40)*/))
+                    {
+                        isEnemyDropdownVisible = !isEnemyDropdownVisible;
+                    }
+
+                    // This block only appears after clicking the button, acting as the dropdown.
+                    if (isEnemyDropdownVisible)
+                    {
+                        // Set a proper height for the dropdown area
+                        enemyScrollPosition = GUILayout.BeginScrollView(enemyScrollPosition, GUILayout.Width(270), GUILayout.Height(200));
+
+                        for (int i = 0; i < enemyNames.Length; i++)
+                        {
+                            if (GUILayout.Button(enemyNames[i] /*GUILayout.Width(190), GUILayout.Height(30)*/))
+                            {
+                                selectedEnemyIndex = i;
+                                enemyButtonText = enemyNames[i]; // Update the button text
+                                isEnemyDropdownVisible = false;
+                            }
+                        }
+
+                        GUILayout.EndScrollView();
+                    }
+
+                    if (selectedEnemyIndex != -1 && GUILayout.Button("Spawn Enemy"/*, GUILayout.Width(200), GUILayout.Height(40)*/))
+                    {
+                        Monster.SpawnMonster(enemyNames[selectedEnemyIndex]);
+                        // selectedEnemyIndex = -1; // Uncomment if you want to reset the selection after spawning
+                    }
+                }
+                GUILayout.EndVertical();
+            }
+
             GUI.DragWindow();
         }
 
