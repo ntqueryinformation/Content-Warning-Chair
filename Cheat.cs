@@ -6,6 +6,7 @@ using System.Collections;
 using System.Linq;
 using UnityEngine;
 using Zorro.Core;
+using Zorro.Core.CLI;
 
 namespace ExampleAssembly
 {
@@ -33,7 +34,7 @@ namespace ExampleAssembly
         private int selectedItemIndex = -1;
         private Vector2 scrollPosition;
 
-        private string[] enemyNames = new string[] { "Ear", "Zombe", "Spider", "Snatcho", "AnglerMimic", "EyeGuy", "Toolkit_Wisk", "Bombs", "Knifo", "Angler", "BigSlap", "Ghost", "BarnacleBall", "Jello", "Weeping", "MimicInfiltrator","Flicker" }; // Add the rest of your enemy names here
+        private string[] enemyNames = new string[] { "Ear", "Zombe", "Spider", "Snatcho", "AnglerMimic", "EyeGuy", "Toolkit_Wisk", "Bombs", "Knifo", "Angler", "BigSlap", "Ghost", "BarnacleBall", "Jello", "Weeping", "MimicInfiltrator", "Flicker" }; // Add the rest of your enemy names here
         private int selectedEnemyIndex = -1;
         private bool isEnemyDropdownVisible = false;
         private Vector2 enemyScrollPosition;
@@ -335,6 +336,25 @@ namespace ExampleAssembly
                     }
                 }
                 GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                {
+                    if (GUILayout.Button("Open Console"))
+                    {
+                        foreach (DebugUIHandler item in FindObjectsOfType<DebugUIHandler>())
+                        {
+                            item.Show();
+                        }
+                    }
+
+                    if (GUILayout.Button("Close Console"))
+                    {
+                        foreach (DebugUIHandler item in FindObjectsOfType<DebugUIHandler>())
+                        {
+                            item.Hide();
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
             }//Self Tab
             if (tabSelected == 1)
             {
@@ -424,33 +444,31 @@ namespace ExampleAssembly
                         }
                     }
                 }
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
+                GUILayout.EndHorizontal();
+                GUILayout.BeginHorizontal();
+                {
+                    if (GUILayout.Button("Web All Players"))
                     {
-                        if (GUILayout.Button("Web All Players"))
+                        if (Cheat.players.Length > 0)
                         {
-                            if (Cheat.players.Length > 0)
+                            foreach (Player player in Cheat.players)
                             {
-                                foreach (Player player in Cheat.players)
-                                {
-                                    WebTroll(player, false);
-                                }
-                            }
-                        }
-                        if (GUILayout.Button("Web All Monsters"))
-                        {
-                            if (Cheat.players.Length > 0)
-                            {
-                                foreach (Player player in Cheat.players)
-                                {
-                                    WebTroll(player, true);
-                                }
+                                WebTroll(player, false);
                             }
                         }
                     }
-                    GUILayout.EndHorizontal();
-      
-                
+                    if (GUILayout.Button("Web All Monsters"))
+                    {
+                        if (Cheat.players.Length > 0)
+                        {
+                            foreach (Player player in Cheat.players)
+                            {
+                                WebTroll(player, true);
+                            }
+                        }
+                    }
+                }
+                GUILayout.EndHorizontal();
             }
             if (tabSelected == 3)
             {
