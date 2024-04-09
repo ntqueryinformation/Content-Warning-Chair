@@ -400,6 +400,7 @@ namespace ExampleAssembly
                                 }
                             }
                         }
+                       
                     }
                     GUILayout.EndHorizontal();
                 }
@@ -477,22 +478,7 @@ namespace ExampleAssembly
                     }
                 }
                 GUILayout.EndHorizontal();
-                if (GUILayout.Button("Spawn Drone"))
-                {
-                    foreach (ShopHandler shop in FindObjectsOfType<ShopHandler>())
-                    {
-                        var fieldInfo = typeof(ShopHandler).GetField("m_PhotonView", BindingFlags.NonPublic | BindingFlags.Instance);
-                        if (fieldInfo != null)
-                        {
-                            PhotonView m_PhotonView = (PhotonView)fieldInfo.GetValue(shop);
-                            byte[] itemIDs = new byte[] { 0x1 };
-                            m_PhotonView.RPC("RPCA_SpawnDrone", RpcTarget.All, new object[]
-            {
-                itemIDs
-            });
-                        }
-                    }
-                }
+                
                 GUILayout.BeginHorizontal();
                 {
                     if (GUILayout.Button("Ragdoll Players"))
@@ -529,6 +515,39 @@ namespace ExampleAssembly
                     }
                 }
                 GUILayout.EndHorizontal();
+                if (GUILayout.Button("Spawn Drone"))
+                {
+                    foreach (ShopHandler shop in FindObjectsOfType<ShopHandler>())
+                    {
+                        var fieldInfo = typeof(ShopHandler).GetField("m_PhotonView", BindingFlags.NonPublic | BindingFlags.Instance);
+                        if (fieldInfo != null)
+                        {
+                            PhotonView m_PhotonView = (PhotonView)fieldInfo.GetValue(shop);
+                            byte[] itemIDs = new byte[] { 0x1 };
+                            m_PhotonView.RPC("RPCA_SpawnDrone", RpcTarget.All, new object[]
+            {
+                itemIDs
+            });
+                        }
+                    }
+                }
+                if (GUILayout.Button("Black Screen/Brick Lobby"))
+                {
+                    foreach (PhotonGameLobbyHandler handler in FindObjectsOfType<PhotonGameLobbyHandler>())
+                    {
+                        handler.photonView.RPC("RPC_StartTransition", RpcTarget.Others, Array.Empty<object>());
+                        RetrievableResourceSingleton<TransitionHandler>.Instance.TransitionToBlack(3f, delegate
+                        {
+                            if (!PhotonNetwork.InRoom)
+                            {
+                                return;
+                            }
+                            VerboseDebug.Log("Returning To Surface!");
+                            RetrievableSingleton<PersistentObjectsHolder>.Instance.FindPersistantObjects();
+                            PhotonNetwork.LoadLevel("SurfaceScene");
+                        }, 3f);
+                    }
+                }
                 greenScreenSpam = GUILayout.Toggle(greenScreenSpam, "Projector Spam");
             }
             if (tabSelected == 3)
