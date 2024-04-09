@@ -22,6 +22,7 @@ namespace ExampleAssembly
         private bool superJump;
         private bool rainbowVisor;
         private bool blinkingFace;
+        private bool greenScreenSpam;
 
         private float lastCacheTime = Time.time + 5f;
         private float lastItemCache = Time.time + 1f;
@@ -181,6 +182,13 @@ namespace ExampleAssembly
                                 batteryEntry.AddCharge(1000);
                             }
                         }
+                    }
+                }
+                if (greenScreenSpam)
+                {
+                    foreach (ProjectorMachine machine in FindObjectsOfType<ProjectorMachine>())
+                    {
+                        machine.PressMore();
                     }
                 }
             }
@@ -521,6 +529,7 @@ namespace ExampleAssembly
                     }
                 }
                 GUILayout.EndHorizontal();
+                greenScreenSpam = GUILayout.Toggle(greenScreenSpam, "Projector Spam");
             }
             if (tabSelected == 3)
             {
