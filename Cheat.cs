@@ -35,7 +35,7 @@ namespace ExampleAssembly
         private Vector2 scrollPosition;
         private Vector2 scrollPosition2;
 
-        private string[] enemyNames = new string[] { "Ear", "Zombe", "Spider", "Snatcho", "AnglerMimic", "EyeGuy", "Toolkit_Wisk", "Bombs", "Knifo", "Angler", "BigSlap", "Ghost", "BarnacleBall", "Jello" }; // Add the rest of your enemy names here
+        private string[] enemyNames = new string[] { "Angler", "AnglerMimic", "BarnacleBall", "BigSlap", "Bombs", "Dog", "Ear", "EyeGuy", "Flicker", "Ghost", "Jello", "Knifo", "Larva", "MimicInfiltrator", "Mouthe", "Slurper", "Snatcho", "Spider", "Snail", "ToolkitBoy", "Toolkit_Fan", "Toolkit_Hammer", "Toolkit_Iron", "Toolkit_Vaccum", "Toolkit_Wisk", "Weeping", "Zombe" }; // Add the rest of your enemy names here
         private int selectedEnemyIndex = -1;
         private bool isEnemyDropdownVisible = false;
         private Vector2 enemyScrollPosition;
