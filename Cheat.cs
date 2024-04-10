@@ -531,7 +531,7 @@ namespace ExampleAssembly
                         }
                     }
                 }
-                if (GUILayout.Button("Black Screen/Brick Lobby"))
+                if (GUILayout.Button("Black Screen/Break Lobby"))
                 {
                     foreach (PhotonGameLobbyHandler handler in FindObjectsOfType<PhotonGameLobbyHandler>())
                     {
@@ -546,6 +546,17 @@ namespace ExampleAssembly
                             RetrievableSingleton<PersistentObjectsHolder>.Instance.FindPersistantObjects();
                             PhotonNetwork.LoadLevel("SurfaceScene");
                         }, 3f);
+                    }
+                }
+                if (GUILayout.Button("Force Players to Bed"))
+                {
+                    Bed[] beds = FindObjectsOfType<Bed>();
+                    Player[] players = Cheat.players;
+                  
+
+                    for (int i = 0; i < beds.Length; i++)
+                    {
+                        beds[i].RequestSleep(players[i]);
                     }
                 }
                 greenScreenSpam = GUILayout.Toggle(greenScreenSpam, "Projector Spam");
