@@ -503,6 +503,10 @@ namespace ExampleAssembly
                             }
                         }
                     }
+                     if (GUILayout.Button("Remove Spawns")) // Removes all manually spawned enemies/clones
+                    {
+                        BotHandler.instance.DestroyAll();
+                    }
                     if (GUILayout.Button("Kill Players"))
                     {
                         if (Cheat.players.Length > 0)
