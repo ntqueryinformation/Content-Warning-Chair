@@ -16,6 +16,7 @@ namespace ExampleAssembly
         private Rect mainWRect = new Rect(5f, 5f, 300f, 150f);
         private bool godmode;
         private bool infBattery;
+        private bool noRagDoll;
         private bool drawMenu = true;
         private bool stamina = false;
         private bool oxygen = false;
@@ -191,6 +192,10 @@ namespace ExampleAssembly
                         machine.PressMore();
                     }
                 }
+                if (noRagDoll)
+                {
+                    Player.localPlayer.data.fallTime = 0f;
+                }
             }
 
             if (Time.time >= lastCacheTime)
@@ -323,6 +328,7 @@ namespace ExampleAssembly
                     GUILayout.BeginHorizontal();
                     {
                         infBattery = GUILayout.Toggle(infBattery, "Inf. Battery");
+                        noRagDoll = GUILayout.Toggle(noRagDoll, "No Ragdoll");
                     }
                     GUILayout.EndHorizontal();
                 }
