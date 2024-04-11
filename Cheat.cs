@@ -36,7 +36,7 @@ namespace ExampleAssembly
         private int selectedItemIndex = -1;
         private Vector2 scrollPosition;
 
-        private string[] enemyNames = new string[] { "Angler", "AnglerMimic", "BarnacleBall", "BigSlap", "Bombs", "Dog", "Ear", "EyeGuy", "Flicker", "Ghost", "Jello", "Knifo", "Larva", "MimicInfiltrator", "Mouthe", "Slurper", "Snatcho", "Spider", "Snail", "ToolkitBoy", "Toolkit_Fan", "Toolkit_Hammer", "Toolkit_Iron", "Toolkit_Vaccum", "Toolkit_Wisk", "Weeping", "Zombe" };
+        private string[] enemyNames = new string[] { "AnglerMimic", "BarnacleBall", "BigSlap", "Bombs", "Dog", "Ear", "EyeGuy", "Flicker", "Ghost", "Jello", "Knifo", "Larva", "MimicInfiltrator", "Mouthe", "Slurper", "Snatcho", "Spider", "Snail", "Toolkit_Fan", "Toolkit_Hammer", "Toolkit_Iron", "Toolkit_Vaccum", "Toolkit_Wisk", "Weeping", "Zombe" };
         private int selectedEnemyIndex = -1;
         private bool isEnemyDropdownVisible = false;
         private Vector2 enemyScrollPosition;
@@ -639,8 +639,13 @@ namespace ExampleAssembly
                     }
                 }
                 GUILayout.EndVertical();
+                GUILayout.BeginHorizontal();
+                    if (GUILayout.Button("Remove Spawned Enemies")) // Removes all manually spawned enemies
+                    {
+                        BotHandler.instance.DestroyAll();
+                    }
+                GUILayout.EndHorizontal();
             }
-
             GUI.DragWindow();
         }
 
