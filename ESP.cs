@@ -15,6 +15,9 @@ namespace ExampleAssembly {
         public static bool item = true;
         public static bool vehicle = true;
 
+        private static bool chamsEnabled = false;
+        private static Dictionary<Renderer, Material[]> originalMaterialsDict = new Dictionary<Renderer, Material[]>();
+
         private static readonly float crosshairScale = 7f;
         private static readonly float lineThickness = 1.75f;
 
@@ -38,17 +41,31 @@ namespace ExampleAssembly {
             mainCam = Camera.main;
         }
 
-        public static void DoChams() {
+            public static void DoChams() {
+            chamsEnabled = !chamsEnabled;
+
             foreach (Player player in FindObjectsOfType<Player>()) {
                 if (player == null) {
                     continue;
                 }
 
-               foreach (Renderer renderer in player?.gameObject?.GetComponentsInChildren<Renderer>()) {
-                    renderer.material = chamsMaterial;
-                    //renderer.material = ;
+                foreach (Renderer renderer in player?.gameObject?.GetComponentsInChildren<Renderer>()) {
+                    if (chamsEnabled) {
+                        // Store original materials before applying chams
+                        if (!originalMaterialsDict.ContainsKey(renderer)) {
+                            originalMaterialsDict.Add(renderer, renderer.materials);
+                        }
+                        renderer.material = chamsMaterial;
+                    } else {
+                        // Restore original materials when chams are disabled
+                        if (originalMaterialsDict.ContainsKey(renderer)) {
+                            renderer.materials = originalMaterialsDict[renderer];
+                            originalMaterialsDict.Remove(renderer); // Clean up dictionary
+                        }
+                    }
                 }
-
+            }
+        
                 /*Highlighter h = player.GetOrAddComponent<Highlighter>();
                 
                 if (h) {
@@ -57,7 +74,7 @@ namespace ExampleAssembly {
                 }*/
             }
 
-        }
+        
 
         public void OnGUI() {
             if (Event.current.type != EventType.Repaint) {
@@ -65,7 +82,6 @@ namespace ExampleAssembly {
             }
 
             Items();
-           
             PlayerName();
             PlayerBox();
             Crosshair();
